@@ -1,3 +1,7 @@
+interface addArgs {
+  name: string;
+}
+
 export class View {
   public id: number;
   public selectedCategory: string | null = null;
@@ -47,14 +51,11 @@ export class View {
         <div class="features" id="${featuresId}">
           <div class="filter">
             <h1>Filter</h1>
-            ${["All", "Completed", "Not Completed"]
-              .map(
-                (filter) =>
-                  `<button id="filter${filter.toLowerCase()}-${
-                    this.id
-                  }">${filter}</button>`
-              )
-              .join("")}
+
+            <button id="all${this.id}">all </button>
+            <button id="completed${this.id}">completed </button>
+            <button id="notcompleted${this.id}">not completed </button>
+
           </div>
           <div class="search">
             <h1>Search</h1>
@@ -62,22 +63,17 @@ export class View {
               this.id
             }" placeholder="Enter something to search" />
           </div>
-          <div class="filterdate">
-            <h1>Date Range Filter</h1>
-            <input type="date" id="filterStartDate-${this.id}" />
-            <input type="date" id="filterEndDate-${this.id}" />
-            <button id="filterBtn-${this.id}">Filter</button>
-          </div>
+            <div class="filterdate">
+              <h1>Date Range Filter</h1>
+              <input type="date" id="filterStartDate-${this.id}" />
+              <input type="date" id="filterEndDate-${this.id}" />
+              <button id="filterBtn-${this.id}">Filter</button>
+            </div>
           <div class="groupbycategory">
             <h1>Group By</h1>
-            ${["Work", "Home", "Personal"]
-              .map(
-                (cat) =>
-                  `<button id="${cat.toLowerCase()}g-${
-                    this.id
-                  }" class="groupbycategoryfilter">${cat}</button>`
-              )
-              .join("")}
+            <button id="homefilter${this.id}">home </button>
+            <button id="workfilter${this.id}">work </button>
+            <button id="personalfilter${this.id}">personal </button>
           </div>
         </div>
       </div>
@@ -186,9 +182,102 @@ export class View {
       const filteredData = data.filter(
         (elem: { id: number }) => elem.id === this.id
       );
+
       filteredData.forEach((elem: any) =>
         this.createTodoItem(elem, dataContainer)
       );
+      const updateDataDisplay = (items: any[]) => {
+        dataContainer.innerHTML = ""; // Clear previous data
+        items.forEach((elem: any) => this.createTodoItem(elem, dataContainer));
+      };
+
+      document
+        .getElementById(`all${this.id}`)
+        ?.addEventListener("click", () => {
+          updateDataDisplay(filteredData);
+        });
+
+      document
+        .getElementById(`completed${this.id}`)
+        ?.addEventListener("click", () => {
+          const completedItems = filteredData.filter(
+            (elem: any) => elem.checked
+          );
+          updateDataDisplay(completedItems);
+        });
+
+      document
+        .getElementById(`notcompleted${this.id}`)
+        ?.addEventListener("click", () => {
+          const notCompletedItems = filteredData.filter(
+            (elem: any) => !elem.checked
+          );
+          updateDataDisplay(notCompletedItems);
+        });
+
+      const searchInput = document.getElementById(
+        `search-${this.id}`
+      ) as HTMLInputElement;
+
+      searchInput.addEventListener("input", () => {
+        const searchTerm = searchInput.value.toLowerCase(); // Get the search term
+        const searchedItems = filteredData.filter((elem: any) => {
+          return elem.text && elem.text.toLowerCase().includes(searchTerm);
+        });
+        updateDataDisplay(searchedItems); // Update the display with filtered items
+      });
+
+      document
+        .getElementById(`filterBtn-${this.id}`)
+        ?.addEventListener("click", () => {
+          const startDateInput = document.getElementById(
+            `filterStartDate-${this.id}`
+          ) as HTMLInputElement;
+          const endDateInput = document.getElementById(
+            `filterEndDate-${this.id}`
+          ) as HTMLInputElement;
+
+          const startDate = new Date(startDateInput.value);
+          const endDate = new Date(endDateInput.value);
+
+          const dateFilteredItems = filteredData.filter((dataItem: any) => {
+            const itemStartDate = new Date(dataItem.startDate);
+            const itemEndDate = new Date(dataItem.endDate);
+            return itemStartDate >= startDate && itemEndDate <= endDate;
+          });
+
+          updateDataDisplay(dateFilteredItems);
+        });
+
+      document
+        .getElementById(`homefilter${this.id}`)
+        ?.addEventListener("click", () => {
+          let homefilter = filteredData.filter((data: any) => {
+            return data.category == "Home";
+          });
+
+          updateDataDisplay(homefilter);
+        });
+
+      document
+        .getElementById(`workfilter${this.id}`)
+        ?.addEventListener("click", () => {
+          let workfilter = filteredData.filter((data: any) => {
+            return data.category == "Work";
+          });
+
+          updateDataDisplay(workfilter);
+        });
+
+      document
+        .getElementById(`personalfilter${this.id}`)
+        ?.addEventListener("click", () => {
+          let personalfilter = filteredData.filter((data: any) => {
+            return data.category == "Personal";
+          });
+
+          updateDataDisplay(personalfilter);
+        });
     } catch (error) {
       console.error("Error fetching data:", error);
     }
